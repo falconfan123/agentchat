@@ -19,14 +19,14 @@ redis:
 multi_models:
   # 对话模型配置
   conversation_model:
-    api_key: "sk-fc40dd0604f04142a******"
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    model_name: "qwen-plus"
+    api_key: "00f9255a-cabf-44ee-8ba3-8d1cd343de6f"
+    base_url: "https://ark.cn-beijing.volces.com/api/v3"
+    model_name: "doubao-seed-1-6-lite-251015"
   # 工具调用/Function Call 模型配置
   tool_call_model:
-    api_key: "sk-fc40dd0604f04142a******"
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    model_name: "qwen-plus"
+    api_key: "00f9255a-cabf-44ee-8ba3-8d1cd343de6f"
+    base_url: "https://ark.cn-beijing.volces.com/api/v3"
+    model_name: "doubao-seed-1-6-lite-251015"
   # 复杂推理模型配置
   reasoning_model:
     api_key: "sk-6d47d94f4c734357******"
