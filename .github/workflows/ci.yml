@@ -30,7 +30,7 @@ jobs:
       - name: 安装依赖
         run: |
           poetry config virtualenvs.create false
-          poetry install --no-interaction
+          poetry install --no-interaction --no-root
 
       - name: 代码检查
         run: |
