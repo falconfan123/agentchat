@@ -126,3 +126,31 @@ class LLMDao:
 
             result = await session.exec(statement)
             return result.all()
+
+    @classmethod
+    async def update_system_llm(cls, model: str, base_url: str, api_key: str, provider: str):
+        """更新系统默认LLM配置"""
+        with session_getter() as session:
+            # 查找系统用户的LLM记录
+            stmt = select(LLMTable).where(LLMTable.user_id == SystemUser)
+            system_llm = session.exec(stmt).first()
+
+            if system_llm:
+                # 更新现有记录
+                system_llm.model = model
+                system_llm.base_url = base_url
+                system_llm.api_key = api_key
+                system_llm.provider = provider
+            else:
+                # 如果不存在则创建
+                system_llm = LLMTable(
+                    model=model,
+                    base_url=base_url,
+                    api_key=api_key,
+                    provider=provider,
+                    user_id=SystemUser,
+                    llm_type="LLM"
+                )
+                session.add(system_llm)
+
+            session.commit()

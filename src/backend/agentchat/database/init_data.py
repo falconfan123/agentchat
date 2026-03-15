@@ -43,6 +43,9 @@ async def init_default_agent():
             logger.success("Default agents initialized successfully")
         else:
             logger.info("Default agents already initialized")
+
+        # 每次启动时都同步系统LLM配置（确保与配置文件保持一致）
+        await LLMService.sync_system_llm_from_config()
     except Exception as err:
         logger.error(f"Failed to initialize default agents: {err}")
 
@@ -78,19 +81,8 @@ async def insert_agent_to_mysql():
 
 # 认定OS下有一个默认LLM API KEY
 async def insert_llm_to_mysql():
-    api_key = app_settings.multi_models.conversation_model.api_key
-    base_url = app_settings.multi_models.conversation_model.base_url
-    model = app_settings.multi_models.conversation_model.model_name
-    provider = get_provider_from_model(model)
-
-    await LLMService.create_llm(
-        user_id=SystemUser,
-        model=model,
-        llm_type="LLM",
-        api_key=api_key,
-        base_url=base_url,
-        provider=provider
-    )
+    # 先尝试从配置同步系统LLM（如果已存在则更新，不存在则创建）
+    await LLMService.sync_system_llm_from_config()
 
 
 # 初始化默认的Tool
