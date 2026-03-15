@@ -106,3 +106,18 @@ class LLMService:
         results = await LLMDao.search_llms_by_name(user_id, llm_name)
         return [result.to_dict(["api_key"]) for result in results]
 
+    @classmethod
+    async def sync_system_llm_from_config(cls):
+        """从配置文件同步系统LLM配置到数据库"""
+        from agentchat.settings import app_settings
+        from agentchat.utils.helpers import get_provider_from_model
+
+        config = app_settings.multi_models.conversation_model
+        await LLMDao.update_system_llm(
+            model=config.model_name,
+            base_url=config.base_url,
+            api_key=config.api_key,
+            provider=get_provider_from_model(config.model_name)
+        )
+        logger.info(f"System LLM synced to: {config.model_name}")
+
