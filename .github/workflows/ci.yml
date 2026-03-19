@@ -23,19 +23,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 安装 Poetry
-        run: |
-          pip install poetry
-
       - name: 安装依赖
         run: |
-          poetry config virtualenvs.create false
-          poetry install --no-interaction --no-root
+          pip install -r requirements.txt
+          pip install flake8 pytest
 
       - name: 代码检查
         run: |
-          poetry run flake8 src/ --max-line-length=120 --ignore=E501,W503 || true
+          flake8 src/ --max-line-length=120 --ignore=E501,W503 || true
 
       - name: 运行测试 (如果有)
         run: |
-          poetry run pytest --ignore=tests 2>/dev/null || echo "No tests found"
+          pytest --ignore=tests 2>/dev/null || echo "No tests found"
