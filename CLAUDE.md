@@ -20,6 +20,13 @@ docker-compose logs -f          # 查看日志
 # MinIO控制台: http://localhost:9001
 ```
 
+## 测试账号
+
+- **用户名**: testuser
+- **密码**: test123
+
+首次登录后，系统会自动创建测试用户。
+
 ## 偏好设置
 
 - **Docker 运行**: 使用 OrbStack 而非 Docker Desktop
