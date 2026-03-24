@@ -14,5 +14,9 @@ vector_db/
 
 node_modules/
 
+# macOS
+._*
+.DS_Store
+
 # Claude Code config
 .superset/
