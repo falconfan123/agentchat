@@ -1,4 +1,7 @@
 
+# 项目名称
+name: agentchat
+
 # 🌐 网络配置
 networks:
   agentchat-network:
