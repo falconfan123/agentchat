@@ -1,6 +1,7 @@
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+// 使用代理路径 /api，而不是直接连接后端
+const API_PREFIX = '/api'
 
 // 生成灵寻的指导提示（流式）
 export const generateLingSeekGuidePromptAPI = async (
@@ -19,12 +20,12 @@ export const generateLingSeekGuidePromptAPI = async (
   console.log('=== generateLingSeekGuidePromptAPI 调用 ===')
   console.log('参数:', data)
   console.log('Token:', token ? `${token.substring(0, 20)}...` : '无')
-  console.log('请求 URL:', `${BASE_URL}/api/v1/workspace/lingseek/guide_prompt`)
+  console.log('请求 URL:', `${API_PREFIX}/api/v1/workspace/lingseek/guide_prompt`)
   
   const ctrl = new AbortController()
   
   try {
-    await fetchEventSource(`${BASE_URL}/api/v1/workspace/lingseek/guide_prompt`, {
+    await fetchEventSource(`${API_PREFIX}/api/v1/workspace/lingseek/guide_prompt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ export const regenerateLingSeekGuidePromptAPI = async (
   const ctrl = new AbortController()
   
   try {
-    await fetchEventSource(`${BASE_URL}/api/v1/workspace/lingseek/guide_prompt/feedback`, {
+    await fetchEventSource(`${API_PREFIX}/api/v1/workspace/lingseek/guide_prompt/feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +157,7 @@ export const generateLingSeekTasksAPI = async (
   const ctrl = new AbortController()
   
   try {
-    await fetchEventSource(`${BASE_URL}/api/v1/workspace/lingseek/task`, {
+    await fetchEventSource(`${API_PREFIX}/api/v1/workspace/lingseek/task`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +227,7 @@ export const startLingSeekTaskAPI = async (
   const ctrl = new AbortController()
   
   try {
-    await fetchEventSource(`${BASE_URL}/api/v1/workspace/lingseek/task_start`, {
+    await fetchEventSource(`${API_PREFIX}/api/v1/workspace/lingseek/task_start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

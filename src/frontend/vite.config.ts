@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       https: false,
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:7860',
+          target: 'http://agentchat-backend:7860',
           changeOrigin: true,
         }
       },

@@ -76,12 +76,16 @@ export const workspaceSimpleChatStreamAPI = async (
   const token = localStorage.getItem('token')
   const ctrl = new AbortController()
 
+  // 使用代理路径 /api，而不是直接连接后端
+  const API_PREFIX = '/api'
+  const apiUrl = `${API_PREFIX}/v1/workspace/simple/chat`
+
   console.log('=== workspaceSimpleChatStreamAPI 调用 ===')
   console.log('请求参数:', data)
-  console.log('请求 URL:', `${BASE_URL}/api/v1/workspace/simple/chat`)
+  console.log('请求 URL:', apiUrl)
 
   try {
-    await fetchEventSource(`${BASE_URL}/api/v1/workspace/simple/chat`, {
+    await fetchEventSource(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
