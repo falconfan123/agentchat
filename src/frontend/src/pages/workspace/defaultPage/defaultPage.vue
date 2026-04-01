@@ -37,7 +37,18 @@ const modelOptions = ref<LLMResponse[]>([])
 const modelsLoading = ref(false)
 
 // 本页对话消息（用户在上，AI在下）
-const messages = ref<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  eventInfo?: Array<{
+    event_type: string
+    message: string
+    status: string
+    show: boolean
+  }>
+}
+
+const messages = ref<ChatMessage[]>([])
 
 // 头像加载错误处理
 const handleAvatarError = (event: Event) => {
@@ -251,8 +262,53 @@ const handleSend = async () => {
     
     // 预置一条AI消息用于流式累加（先添加到数组，然后通过索引更新以触发响应式）
     const aiMsgIndex = messages.value.length
-    messages.value.push({ role: 'assistant', content: '' })
+    messages.value.push({ role: 'assistant', content: '', eventInfo: [] })
     console.log('当前 messages 长度:', messages.value.length)
+
+    // 处理事件更新
+    const handleEventStatus = (eventData: any) => {
+      const { status, title, message } = eventData
+      const eventId = title || '事件'
+
+      // 获取当前 AI 消息
+      const aiMsg = messages.value[aiMsgIndex]
+      if (!aiMsg.eventInfo) {
+        aiMsg.eventInfo = []
+      }
+
+      const existingEventIndex = aiMsg.eventInfo.findIndex(
+        (event) => event.event_type === eventId
+      )
+
+      if (status === 'START') {
+        if (existingEventIndex === -1) {
+          aiMsg.eventInfo.push({
+            event_type: eventId,
+            message: message || "处理中...",
+            status: status,
+            show: false
+          })
+        } else {
+          aiMsg.eventInfo[existingEventIndex].status = status
+          aiMsg.eventInfo[existingEventIndex].message = message || "处理中..."
+        }
+      } else if (status === 'END' || status === 'ERROR') {
+        if (existingEventIndex !== -1) {
+          aiMsg.eventInfo[existingEventIndex].status = status
+          if (message) {
+            aiMsg.eventInfo[existingEventIndex].message = message
+          }
+        } else {
+          aiMsg.eventInfo.push({
+            event_type: eventId,
+            message: message || (status === 'END' ? "已完成" : "处理出错"),
+            status: status,
+            show: false
+          })
+        }
+      }
+      console.log('RAG事件更新:', aiMsg.eventInfo)
+    }
 
     try {
       const payload: WorkSpaceSimpleTask = {
@@ -272,6 +328,7 @@ const handleSend = async () => {
           // 每次收到新内容时自动滚动到底部
           scrollToBottom()
         },
+        handleEventStatus,
         (err) => {
           console.error('日常模式流式出错', err)
           ElMessage.error('对话失败，请稍后重试')
@@ -429,6 +486,13 @@ watch(
           <div v-if="msg.role === 'assistant'" class="ai-message">
             <img src="/src/assets/robot.svg" alt="AI Avatar" class="avatar" />
             <div class="message-content">
+              <!-- 事件进度信息 -->
+              <div v-if="msg.eventInfo && msg.eventInfo.length" class="event-info-list">
+                <div v-for="(event, evIdx) in msg.eventInfo" :key="evIdx" class="event-info-row" :class="event.status">
+                  <span class="event-info-title">{{ event.event_type }}</span>
+                  <span class="event-info-message">{{ event.message }}</span>
+                </div>
+              </div>
               <!-- 加载转圈器 - 仅在内容为空且正在生成时显示 -->
               <div v-if="!msg.content && isGenerating && idx === messages.length - 1" class="loading-spinner-container">
                 <div class="loading-spinner"></div>
@@ -1560,6 +1624,67 @@ watch(
       }
     }
   }
+}
+
+/* 事件进度信息样式 */
+.event-info-list {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
+}
+
+.event-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+
+  &.START {
+    color: #409eff;
+
+    .event-info-title::before {
+      content: "●";
+      margin-right: 4px;
+      animation: pulse 1s infinite;
+    }
+  }
+
+  &.END {
+    color: #67c23a;
+
+    .event-info-title::before {
+      content: "✓";
+      margin-right: 4px;
+    }
+  }
+
+  &.ERROR {
+    color: #f56c6c;
+
+    .event-info-title::before {
+      content: "✕";
+      margin-right: 4px;
+    }
+  }
+}
+
+.event-info-title {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.event-info-message {
+  color: #606266;
+  flex: 1;
+  word-break: break-word;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>
 

@@ -69,6 +69,7 @@ export const workspaceSimpleChatAPI = async (data: WorkSpaceSimpleTask) => {
 export const workspaceSimpleChatStreamAPI = async (
   data: WorkSpaceSimpleTask,
   onMessage: (chunk: string) => void,
+  onEvent?: (eventData: any) => void,
   onError?: (err: any) => void,
   onClose?: () => void
 ) => {
@@ -95,8 +96,13 @@ export const workspaceSimpleChatStreamAPI = async (
         try {
           const parsed = JSON.parse(event.data)
           console.log('📦 解析后的数据:', parsed)
+          // 处理事件类型（RAG流程步骤等）
+          if (parsed?.type === 'event' && onEvent) {
+            console.log('📝 提取 event:', parsed.data)
+            onEvent(parsed.data)
+          }
           // 兼容后端返回 {event:'task_result', data:{message}} 或 {data:{chunk}}
-          if (parsed?.data?.message !== undefined) {
+          else if (parsed?.data?.message !== undefined) {
             // 只有当 message 不为空字符串时才调用回调
             if (parsed.data.message !== '') {
               console.log('📝 提取 message:', parsed.data.message)
