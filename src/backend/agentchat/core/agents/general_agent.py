@@ -340,6 +340,8 @@ class GeneralAgent:
         return mcp_agent_as_tools
 
     async def setup_knowledge_tool(self):
+        from langgraph.config import get_stream_writer
+
         @tool(parse_docstring=True)
         async def retrival_knowledge(query: str) -> str:
             """
@@ -351,10 +353,38 @@ class GeneralAgent:
             Returns:
                 str: 返回从知识库检索来的信息
             """
-            knowledge_message = await RagHandler.retrieve_ranked_documents(
-                query, self.agent_config.knowledge_ids
-            )
-            return knowledge_message
+            writer = get_stream_writer()
+
+            def event_callback(event_data: dict):
+                writer({
+                    "status": event_data.get("status", "END"),
+                    "title": event_data.get("title", "RAG"),
+                    "message": event_data.get("message", "")
+                })
+
+            writer({
+                "status": "START",
+                "title": "RAG: 知识库检索",
+                "message": f"正在检索知识库: {query}..."
+            })
+
+            try:
+                knowledge_message = await RagHandler.retrieve_ranked_documents(
+                    query, self.agent_config.knowledge_ids, event_callback=event_callback
+                )
+                writer({
+                    "status": "END",
+                    "title": "RAG: 知识库检索",
+                    "message": "知识库检索完成"
+                })
+                return knowledge_message
+            except Exception as e:
+                writer({
+                    "status": "ERROR",
+                    "title": "RAG: 知识库检索",
+                    "message": str(e)
+                })
+                raise
 
         if self.agent_config.knowledge_ids: # 当绑定知识库ID后才 As Tool
             self.tools.append(retrival_knowledge)
