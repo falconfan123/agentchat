@@ -36,6 +36,13 @@ const files = ref<KnowledgeFileResponse[]>([])
 const loading = ref(false)
 const uploading = ref(false)
 
+// 上传进度跟踪
+interface UploadProgress {
+  fileName: string
+  percent: number
+}
+const uploadProgressMap = ref<Map<string, UploadProgress>>(new Map())
+
 // 文件上传
 const fileList = ref<UploadUserFile[]>([])
 
@@ -237,11 +244,17 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'image/jpeg',
     'image/png',
-    'image/gif'
+    'image/gif',
+    'text/x-markdown',
+    'model/vnd.m-plantynote.markdown'
   ]
-  
-  if (!supportedTypes.includes(rawFile.type)) {
-    ElMessage.error('不支持的文件类型，请上传PDF、Word、Excel、文本或图片文件')
+
+  // 检查扩展名作为后备
+  const supportedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.md', '.markdown', '.xls', '.xlsx', '.ppt', '.pptx', '.jpg', '.jpeg', '.png', '.gif']
+  const fileExtension = rawFile.name.toLowerCase().substring(rawFile.name.lastIndexOf('.'))
+
+  if (!supportedTypes.includes(rawFile.type) && !supportedExtensions.includes(fileExtension)) {
+    ElMessage.error('不支持的文件类型，请上传PDF、Word、Excel、文本、Markdown或图片文件')
     return false
   }
   
@@ -355,14 +368,30 @@ const handleUploadSuccess = async (response: any, file: any, fileList: any) => {
 const handleUploadError = (error: any, file: any) => {
   console.error('文件上传失败:', error)
   ElMessage.error('文件上传失败')
-  
+
   // 上传失败，将临时文件状态改为失败
   const tempFileIndex = files.value.findIndex(f => f.file_name === file.name && f.id.startsWith('temp_'))
   if (tempFileIndex !== -1) {
     files.value[tempFileIndex].status = KnowledgeFileStatus.FAIL
   }
-  
+
+  // 清除进度
+  uploadProgressMap.value.delete(file.name)
   uploading.value = false
+}
+
+// 文件上传进度处理
+const handleUploadProgress = (event: any, file: any) => {
+  uploadProgressMap.value.set(file.name, {
+    fileName: file.name,
+    percent: Math.round(event.percent)
+  })
+  console.log(`上传进度: ${file.name} - ${Math.round(event.percent)}%`)
+}
+
+// 获取文件上传进度
+const getFileUploadProgress = (fileName: string): number => {
+  return uploadProgressMap.value.get(fileName)?.percent || 0
 }
 
 // 获取状态标签类型
@@ -575,6 +604,7 @@ onUnmounted(() => {
             :before-upload="beforeUpload"
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
+            :on-progress="handleUploadProgress"
             :multiple="true"
             :show-file-list="false"
             :disabled="uploading"
@@ -648,7 +678,7 @@ onUnmounted(() => {
                     <span class="file-name">{{ file.file_name }}</span>
                     <span v-if="isTempFile(file)" class="temp-badge">
                       <span class="badge-icon">⬆️</span>
-                      上传中
+                      上传中 {{ getFileUploadProgress(file.file_name) }}%
                     </span>
                   </div>
                 </div>
@@ -734,6 +764,7 @@ onUnmounted(() => {
           :before-upload="beforeUpload"
           :on-success="handleUploadSuccess"
           :on-error="handleUploadError"
+            :on-progress="handleUploadProgress"
           :multiple="true"
           :show-file-list="false"
           :disabled="uploading"
