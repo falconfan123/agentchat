@@ -1,8 +1,11 @@
 from agentchat.services.storage.oss import OSSClient
 from agentchat.services.storage.minio import MinioClient
+from agentchat.services.storage.local import LocalStorageClient
 from agentchat.settings import app_settings
 
-if app_settings.storage.mode == "minio":
+if app_settings.storage.mode == "local":
+    storage_client = LocalStorageClient()
+elif app_settings.storage.mode == "minio":
     storage_client = MinioClient()
 else:
     storage_client = OSSClient()

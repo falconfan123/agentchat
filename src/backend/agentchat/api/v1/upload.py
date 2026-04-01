@@ -20,9 +20,14 @@ async def upload_file(
         file_content = await file.read()
 
         oss_object_name = get_object_storage_base_path(file.filename)
-        sign_url = urljoin(app_settings.storage.active.base_url, oss_object_name)
 
-        storage_client.sign_url_for_get(sign_url)
+        # 根据存储模式处理 URL
+        if app_settings.storage.mode == "local":
+            # 本地存储返回本地路径
+            sign_url = storage_client.sign_url_for_get(oss_object_name)
+        else:
+            sign_url = urljoin(app_settings.storage.active.base_url, oss_object_name)
+
         storage_client.upload_file(oss_object_name, file_content)
 
         return resp_200(sign_url)

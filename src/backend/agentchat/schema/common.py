@@ -60,8 +60,13 @@ class MinioConfig(BaseModel):
     bucket_name: str
     base_url: str
 
+class LocalConfig(BaseModel):
+    base_path: str
+
+
 class StorageConfig(BaseModel):
-    mode: Literal["oss", "minio"]
+    mode: Literal["local", "oss", "minio"]
+    local: Optional[LocalConfig] = None
     oss: Optional[OSSConfig] = None
     minio: Optional[MinioConfig] = None
 
@@ -71,8 +76,12 @@ class StorageConfig(BaseModel):
             raise ValueError("mode=oss 时必须提供 aliyun_oss")
         if self.mode == "minio" and not self.minio:
             raise ValueError("mode=minio 时必须提供 minio")
+        if self.mode == "local" and not self.local:
+            raise ValueError("mode=local 时必须提供 local")
         return self
 
     @property
     def active(self):
+        if self.mode == "local":
+            return self.local
         return self.oss if self.mode == "oss" else self.minio

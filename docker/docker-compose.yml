@@ -114,7 +114,7 @@ services:
       - "9001:9001"
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/data/minio_data:/minio_data
+      - /Volumes/PSSD/docker-data/agentchat-minio:/minio_data
     command: minio server /minio_data --console-address ":9001"
     restart: on-failure
     networks:

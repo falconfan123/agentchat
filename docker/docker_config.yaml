@@ -102,7 +102,10 @@ rag:
 
 # 对象存储配置
 storage:
-  mode: "minio" # or "oss"
+  mode: "local" # or "minio" or "oss"
+
+  local:
+    base_path: "/app/storage"  # 本地存储路径
 
   oss:
     access_key_id: "LTAI5tL85x*************"
